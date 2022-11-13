@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id        Int      @id @default(autoincrement()) @map("user_id")
+  name      String   @unique @db.VarChar(12)
+  email     String   @unique @db.VarChar(64)
+  nickname  String   @db.VarChar(12)
+  password  String   @db.VarChar(36)
+  sex       Int      @default(1) // 1->男 2->女 3->保密
+  status    Int      @default(0) // 0->正常 1->封禁
+  role      Int      @default(100) // 100->普通用户 900->管理员 999->超级管理员
+  avatar    String   @default("https://cravatar.cn/avatar/1762718020b76ef1d96d10c00761d2d0?size=100") @db.VarChar(200)
+  sign      String   @default("系统原装签名，送给每一位小可爱。") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @updatedAt @map("update_at")
+
+  room    room[]
+  message message[]
+}
+
+model room {
+  id           Int    @id @default(autoincrement()) @map("room_id")
+  ownerId      Int    @map("owner_id")
+  title        String @db.VarChar(20)
+  introduction String @default("暂无简介") @db.VarChar(100)
+  notice       String @default("暂无公告") @db.VarChar(500)
+  status       Int    @default(0) // 0->正常 1->封禁
+  password     String @default("") @db.VarChar(30)
+  needPassword Int    @default(0) @map("need_password") // 0=>公开 1=>需要密码 
+  members      String @db.VarChar(500)
+
+  message message[]
+  user    user      @relation(fields: [ownerId], references: [id])
+}
+
+model message {
+  id             Int      @id @default(autoincrement()) @map("message_id")
+  type           Int      @default(0) @map("message_type") // 0->文本信息
+  roomId         Int      @map("room_id")
+  senderId       Int      @map("sender_id")
+  text           String   @db.VarChar(500)
+  quoteMessageId Int      @default(-1) @map("quote_message_id")
+  status         Int      @default(0) // 0->正常 1->撤回 2->违规
+  createdAt      DateTime @default(now()) @map("create_at")
+
+  user user @relation(fields: [senderId], references: [id])
+  room room @relation(fields: [roomId], references: [id])
+}
