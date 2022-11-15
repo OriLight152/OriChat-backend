@@ -67,14 +67,10 @@ export class ChatService {
         ele.quoteMessageId = -1;
         ele.senderId = 1;
         ele.text = '该信息已被撤回';
-        ele.user.nickname = '超级管理员';
-        ele.user.avatar = '超级管理员';
       } else if (ele.status === 2) {
         ele.quoteMessageId = -1;
         ele.senderId = 1;
         ele.text = '该信息内容违规';
-        ele.user.nickname = '超级管理员';
-        ele.user.avatar = '超级管理员';
       }
     });
     return { room_id, history: h };

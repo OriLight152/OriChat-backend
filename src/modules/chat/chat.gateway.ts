@@ -35,8 +35,8 @@ export class ChatGateway {
         select: { avatar: true },
       })
     ).avatar;
-    this.activeRoom['1'] = { member: [] };
-    this.activeRoom['2'] = { member: [] };
+    this.activeRoom['1'] = { title: '默认房间', member: [] };
+    this.activeRoom['2'] = { title: '房间2', member: [] };
     this.logger.log('WebSocket init at ws://localhost:3002');
   }
 
@@ -76,7 +76,7 @@ export class ChatGateway {
     client.join(room_id);
 
     // 发送通知
-    client.emit('info', '加入房间 ' + room_id);
+    client.emit('info', '加入房间 ' + this.activeRoom[room_id as string].title);
     // await this.newSystemMessage(
     //   room_id as string,
     //   '[系统通知] ' + nickname + '(' + uid + ') 加入当前房间',
@@ -167,7 +167,11 @@ export class ChatGateway {
     this.activeRoom[oldRoom].member.splice(index, 1);
 
     // 发送结果
-    await this.sendNotification(client, 'success', '加入房间 ' + newRoom);
+    await this.sendNotification(
+      client,
+      'success',
+      '加入房间 ' + this.activeRoom[newRoom].title,
+    );
     await client.emit('updateRoomInfo', newRoom);
 
     // 更新两个房间所有人的列表
@@ -214,7 +218,16 @@ export class ChatGateway {
   }
 
   async updateRoomList(client: Socket = undefined) {
-    const rooms = Object.keys(this.activeRoom);
+    // const rooms = Object.keys(this.activeRoom);
+    const rooms = [];
+    Object.keys(this.activeRoom).forEach((room_id) => {
+      const room = {
+        id: room_id,
+        title: this.activeRoom[room_id].title,
+      };
+      rooms.push(room);
+    });
+
     if (!client) {
       for (const room in rooms) {
         this.socket.in(room).emit('updateRoomList', JSON.stringify(rooms));
